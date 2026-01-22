@@ -27,7 +27,10 @@ load_dotenv(env_path)
 NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 
 # MDファイルのパス
-MARKDOWN_FILE = Path("/Users/ishikawasuguru/Threads_piste/Piste_threads_post.md")
+if len(sys.argv) > 1:
+    MARKDOWN_FILE = Path(sys.argv[1])
+else:
+    MARKDOWN_FILE = Path("/Users/ishikawasuguru/Threads_piste/Piste_threads_post.md")
 
 # JST Timezone definition
 JST = timezone(timedelta(hours=9))
