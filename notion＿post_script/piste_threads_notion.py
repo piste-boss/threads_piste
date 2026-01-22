@@ -13,7 +13,7 @@ MDファイルの構造:
 import os
 import sys
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 from notion_client import Client
@@ -28,6 +28,9 @@ NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 
 # MDファイルのパス
 MARKDOWN_FILE = Path("/Users/ishikawasuguru/Threads_piste/Piste_threads_post.md")
+
+# JST Timezone definition
+JST = timezone(timedelta(hours=9))
 
 # NotionデータベースURL
 NOTION_DATABASE_URL = "https://www.notion.so/2efc991b527b8090a546c89a11a5455d?v=2efc991b527b809ab5bf000c9eed24e4&source=copy_link"
@@ -87,7 +90,7 @@ def parse_markdown_posts(markdown_content):
                 if date_match:
                     date_str = date_match.group(1)
                     try:
-                        post["scheduled_date"] = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
+                        post["scheduled_date"] = datetime.strptime(date_str, "%Y-%m-%d %H:%M").replace(tzinfo=JST)
                     except:
                         pass
                 current_section = None
