@@ -33,3 +33,8 @@ python3 notion＿post_script/piste_threads_notion.py
 保存された画像をGoogleドライブへアップロードし、ローカルから削除します。
 // turbo
 cd image_upload && python3 piste_threads_image_uplorder.py
+
+## 6. Notionへの画像URLリンク同期
+アップロードされた画像のGoogleドライブURLを、NotionページのURLプロパティに同期します。
+// turbo
+python3 piste_threads_drive_to_notion.py
