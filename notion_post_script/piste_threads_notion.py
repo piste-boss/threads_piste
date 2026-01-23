@@ -10,6 +10,8 @@ MDファイルの構造:
 - ステータス → 全て「未着手」を選択
 """
 
+print("DEBUG: Script started", flush=True)
+
 import os
 import sys
 import re
@@ -100,7 +102,7 @@ def parse_markdown_posts(markdown_content):
                 content_lines = []
             
             # 本文
-            elif line == "**本文**":
+            elif line.startswith("**本文**"):
                 # 既存のセクションの内容を保存
                 if current_section == "comment" and content_lines:
                     post["comment"] = "\n".join(content_lines).strip()
@@ -109,7 +111,7 @@ def parse_markdown_posts(markdown_content):
                 content_lines = []
             
             # コメント欄
-            elif line == "**コメント欄**":
+            elif line.startswith("**コメント欄**"):
                 # 既存の本文を保存
                 if current_section == "text" and content_lines:
                     post["text"] = "\n".join(content_lines).strip()
@@ -209,6 +211,88 @@ def get_property_name_mapping(database):
                 break
     
     return mapping, properties
+
+
+def find_existing_page(notion, database_id, scheduled_date):
+    """同じ投稿日時を持つ既存ページを検索"""
+    # 日時形式を調整 (Notionに合わせたISO形式)
+    target_iso = scheduled_date.isoformat()
+    
+    # query param
+    # Property filter is tough if we don't know exact prop name, but we can assume '投稿日' or try matching
+    # Since we can't easily rely on property name in this scope without passing mapping...
+    # But we can query broadly or assume "投稿日" exists as we use it for creation.
+    
+    # For safety, let's use the property name '投稿日' directly as it appeared in creation logic default.
+    # Note: If mapped name differs, this might fail. We should probably pass mapping or property name.
+    # For now, let's try date filter on '投稿日'.
+    
+    try:
+        # Check property mapping or use default "投稿日"
+        # We will assume "投稿日" is fine or catch error.
+        resp = notion.databases.query(
+            database_id=database_id,
+            filter={
+                "property": "投稿日",
+                "date": {
+                    "equals": target_iso
+                }
+            }
+        )
+        results = resp.get("results", [])
+        if results:
+            return results[0]["id"]
+        return None
+    except Exception:
+        # If typical filter fails, return None (implies create new)
+        return None
+
+
+def update_post_in_database(notion, page_id, post, property_mapping, all_properties):
+    """既存の投稿を更新"""
+    try:
+        properties = {}
+        
+        # 本文プロパティ
+        if post["text"]:
+            if "本文" in property_mapping:
+                text_prop_name = property_mapping["本文"]
+                properties[text_prop_name] = {
+                    "rich_text": [{
+                        "text": {"content": post["text"][:2000]}
+                    }]
+                }
+        
+        # コメント欄プロパティ
+        if post["comment"]:
+            if "コメント欄" in property_mapping:
+                comment_prop_name = property_mapping["コメント欄"]
+                properties[comment_prop_name] = {
+                    "rich_text": [{
+                        "text": {"content": post["comment"][:2000]}
+                    }]
+                }
+        
+        # タイトルも更新しておく？ (念のため)
+        if "タイトル" in property_mapping:
+             title_prop_name = property_mapping["タイトル"]
+             properties[title_prop_name] = {
+                 "title": [{
+                     "text": {"content": post["title"]}
+                 }]
+             }
+             
+        if not properties:
+            return None
+
+        notion.pages.update(
+            page_id=page_id,
+            properties=properties
+        )
+        return page_id
+    except Exception as e:
+        print(f"  ✗ 更新失敗: {e}")
+        return None
 
 
 def create_post_in_database(notion, database_id, post, property_mapping, all_properties):
@@ -360,6 +444,9 @@ def create_post_in_database(notion, database_id, post, property_mapping, all_pro
         # デバッグ情報：設定されるプロパティを表示
         if properties:
             print(f"  設定するプロパティ: {list(properties.keys())}")
+            import json
+            # Serialize for debug, handle date objects manually if needed or just stringify
+            print(f"DEBUG: Full Properties: {properties}")
         else:
             print(f"  警告: プロパティが設定されていません")
             print(f"  利用可能なプロパティ: {list(all_properties.keys())}")
@@ -405,6 +492,21 @@ def main():
     try:
         posts = parse_markdown_posts(markdown_content)
         print(f"✓ {len(posts)} 件の投稿案を抽出しました")
+        
+        # フィルタリング: 2026/1/24 〜 1/31
+        target_start = datetime(2026, 1, 24).date()
+        target_end = datetime(2026, 1, 31).date()
+        
+        filtered_posts = []
+        for post in posts:
+            if post["scheduled_date"]:
+                post_date = post["scheduled_date"].date()
+                if target_start <= post_date <= target_end:
+                    filtered_posts.append(post)
+        
+        posts = filtered_posts
+        print(f"✓ フィルタリング適用 (1/24 - 1/31): {len(posts)} 件の対象投稿")
+
         for i, post in enumerate(posts, 1):
             print(f"  {i}. {post['title']} ({post['scheduled_date']})")
     except Exception as e:
@@ -528,15 +630,24 @@ def main():
             print(f"  データベース情報のキー: {list(database.keys())}")
         
         # プロパティマッピングを取得
-        # all_propertiesが空の場合は、databaseから取得を試みる
         if not all_properties:
             all_properties = database.get("properties", {})
         
         if all_properties:
             property_mapping, _ = get_property_name_mapping(database)
         else:
-            # プロパティ情報がない場合、空のマッピングを作成
             property_mapping = {}
+        
+        # Fallback: If mapping is empty, force keys.
+        if not property_mapping:
+            print("  警告: マッピング自動検出失敗。既知のプロパティ名を強制的に使用します。")
+            property_mapping = {
+                "タイトル": "タイトル",
+                "投稿日": "投稿日",
+                "本文": "本文",
+                "コメント欄": "コメント欄",
+                "ステータス": "ステータス"
+            }
         
         print(f"\nプロパティマッピング:")
         if property_mapping:
@@ -550,24 +661,43 @@ def main():
         traceback.print_exc()
         sys.exit(1)
     
-    # 各投稿案をデータベースに追加
-    print(f"\nデータベースに投稿案を追加しています...")
+    # 各投稿案をデータベースに追加/更新
+    print(f"\nデータベースに投稿案を反映しています...")
     success_count = 0
+    
     for i, post in enumerate(posts, 1):
         print(f"\n[{i}/{len(posts)}] {post['title']}")
         print(f"  投稿予定日時: {post['scheduled_date']}")
         print(f"  本文: {post['text'][:50]}..." if post['text'] else "  本文: (空)")
         print(f"  コメント: {post['comment'][:50]}..." if post['comment'] else "  コメント: (空)")
         
-        page_id = create_post_in_database(notion, database_id, post, property_mapping, all_properties)
-        if page_id:
-            print(f"  ✓ 追加成功")
-            success_count += 1
+        # 重複チェック
+        existing_page_id = None
+        if post["scheduled_date"]:
+            existing_page_id = find_existing_page(notion, database_id, post["scheduled_date"])
+        
+        if existing_page_id:
+            print(f"  ⚠ 既存のページが見つかりました: {existing_page_id}")
+            print(f"    -> 情報を更新します...")
+            updated_id = update_post_in_database(notion, existing_page_id, post, property_mapping, all_properties)
+            if updated_id:
+                print(f"  ✓ 更新成功")
+                success_count += 1
+            else:
+                print(f"  ✗ 更新失敗")
         else:
-            print(f"  ✗ 追加失敗")
+            print(f"    -> 新規作成します...")
+            
+            page_id = create_post_in_database(notion, database_id, post, property_mapping, all_properties)
+
+            if page_id:
+                print(f"  ✓ 追加成功")
+                success_count += 1
+            else:
+                print(f"  ✗ 追加失敗")
     
     print(f"\n" + "="*50)
-    print(f"✓ 処理完了: {success_count}/{len(posts)} 件の投稿案を追加しました")
+    print(f"✓ 処理完了: {success_count}/{len(posts)} 件の投稿案を処理しました")
     print("="*50)
     
     return 0 if success_count == len(posts) else 1
