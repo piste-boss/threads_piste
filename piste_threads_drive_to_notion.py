@@ -85,14 +85,28 @@ def find_page_by_date(notion, date_obj):
     # Query for the specific DATE (YYYY-MM-DD) which matches any time on that day (usually)
     # OR query for a range.
     # Let's try querying for the date string "YYYY-MM-DD".
-    target_date_str = date_obj.strftime("%Y-%m-%d")
-    
+    # To handle JST/UTC mismatch (e.g. 6AM JST is previous day UTC), 
+    # we query a range around the target date.
+    from datetime import timedelta
+    search_start = (date_obj - timedelta(days=1)).strftime("%Y-%m-%d")
+    search_end = (date_obj + timedelta(days=1)).strftime("%Y-%m-%d")
+
     data = {
         "filter": {
-            "property": "投稿日",
-            "date": {
-                "equals": target_date_str
-            }
+            "and": [
+                {
+                    "property": "投稿日",
+                    "date": {
+                        "on_or_after": search_start
+                    }
+                },
+                {
+                    "property": "投稿日",
+                    "date": {
+                        "on_or_before": search_end
+                    }
+                }
+            ]
         }
     }
     

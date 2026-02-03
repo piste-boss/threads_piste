@@ -40,7 +40,7 @@ def generate_posts_and_prompts():
     # Let's generate for the upcoming Mon-Sun.
     start_date = today + datetime.timedelta(days=1) # Tomorrow
     
-    prompt = f"""
+    propmt_text = f"""
     あなたはプロのSNSマーケターです。ダイエット・筋トレアカウント「ピステ」のThreads投稿を作成してください。
     
     【コンテキスト】
@@ -60,30 +60,24 @@ def generate_posts_and_prompts():
     - **コメント欄**: (詳細な解説、7箇条形式)
     
     また、各投稿に対応する画像生成用のプロンプトも別途作成してください。
-    プロンプトフォーマット:
-    - 日時: YYYY-MM-DD HH:MM
-    - プロンプト: (画像生成AI用の具体的で詳細なプロンプト。日本語。アスペクト比 9:16)
+    プロンプトは以下の形式で、リストとして出力してください（画像生成スクリプトがこの形式を読み取ります）：
+    - **YYYY-MM-DD HH:MM**: (画像生成AI用の具体的で詳細なプロンプト。日本語。アスペクト比 9:16)
     """
     
     print("Generating content...")
-    response = model.generate_content(prompt)
+    response = model.generate_content(propmt_text)
     
     if response.text:
-        # Simple splitting logic (In reality, we might want structured JSON output for reliability)
-        # For now, just appending the raw text appropriately or parsing it.
-        # To be safe, let's append the text to post file.
-        
-        # NOTE: This is a simplified implementation. Ideally, we should parse the response.
         # Appending to Post File
         with open(POST_FILE, 'a', encoding='utf-8') as f:
             f.write("\n\n" + response.text + "\n")
         print(f"Appended posts to {POST_FILE}")
         
-        # For prompts, we need to extract them.
-        # Since parsing is complex without structured output, 
-        # I wll recommend the user to review the file.
-        # Or I can ask Gemini to output prompts in a separate block.
-        pass
+        # Appending to Prompt File (Image Gen script reads this)
+        with open(PROMPT_FILE, 'a', encoding='utf-8') as f:
+            f.write("\n\n" + response.text + "\n")
+        print(f"Appended prompts to {PROMPT_FILE}")
+
     else:
         print("Failed to generate content.")
 
