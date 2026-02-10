@@ -7,7 +7,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/ishikawasuguru/Threads_piste/piste_threads_autopost.sh</string>
+        <string>/Users/ishikawasuguru/Threads_piste/piste_threads_autopost_minimal.sh</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>

@@ -40,45 +40,21 @@ log "✅ Data analysis complete"
 # ------------------------------------------------------------------------------
 # エージェントへのタスクリクエスト作成
 # ------------------------------------------------------------------------------
-WEEK_START=$(date -v+mon '+%Y年%m月%d日')
-WEEK_END=$(date -v+sun '+%Y年%m月%d日')
+cat > "$AGENT_REQUEST_FILE" << 'EOFTASK'
+🤖 Piste Threads 自動化タスク
 
-cat > "$AGENT_REQUEST_FILE" << EOF
-🤖 Antigravityエージェントへのタスク依頼
+木曜20:00のデータ分析が完了しました。
+以下のコマンドをAntigravityで実行してください：
 
-実行日時: $(date '+%Y年%m月%d日 %H:%M:%S')
+Piste_threads_image_prompt.mdから画像を生成して、
+Piste_threads_image/フォルダに保存してください。
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 実行してほしいタスク
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+完了後、以下を実行：
+1. cd image_upload && python3 piste_threads_image_uplorder.py
+2. python3 piste_threads_drive_to_notion.py
 
-以下のコマンドを実行してください：
-
-/piste_threads_full_run
-
-または、以下の手順を実行：
-
-1. Piste_threads_report.mdの最新分析結果を読む
-2. ${WEEK_START}〜${WEEK_END}の1週間分の投稿案を作成
-   - 1日3投稿（6:00, 12:00, 18:00）× 7日 = 21投稿
-   - Piste_threads_post.mdに追記
-   - Piste_threads_image_prompt.mdに画像プロンプトを追記
-3. Notionに同期（python3 notion＿post_script/piste_threads_notion.py）
-4. 画像を生成（generate_imageツール使用）
-5. 画像をGoogleドライブにアップロード
-6. NotionにURLを同期
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 準備完了データ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ Piste_threads_report.md - 最新分析完了
-✅ スプレッドシートデータ同期済み
-⏳ 投稿案作成待ち
-⏳ 画像生成待ち
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-EOF
+詳細: /piste_threads_full_run
+EOFTASK
 
 log "📝 Agent task request created: $AGENT_REQUEST_FILE"
 
@@ -87,7 +63,7 @@ cp "$AGENT_REQUEST_FILE" ~/Desktop/
 
 # macOS通知
 osascript << APPLESCRIPT
-display notification "データ分析完了。Antigravityで /piste_threads_full_run を実行してください" with title "Piste Threads" subtitle "エージェント実行準備完了" sound name "Glass"
+display notification "データ分析完了。Antigravityで画像生成を依頼してください" with title "Piste Threads" subtitle "エージェントタスク準備完了" sound name "Glass"
 APPLESCRIPT
 
 # AI StudioをブラウザでWake up（オプション）
