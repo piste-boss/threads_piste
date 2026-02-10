@@ -493,9 +493,9 @@ def main():
         posts = parse_markdown_posts(markdown_content)
         print(f"✓ {len(posts)} 件の投稿案を抽出しました")
         
-        # フィルタリング: 2026/02/03 〜 2/10
+        # フィルタリング: 2026/02/03 〜 2/11
         target_start = datetime(2026, 2, 3).date()
-        target_end = datetime(2026, 2, 10).date()
+        target_end = datetime(2026, 2, 11).date()
         
         filtered_posts = []
         for post in posts:
