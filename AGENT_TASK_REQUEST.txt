@@ -1,0 +1,13 @@
+🤖 Piste Threads 自動化タスク
+
+木曜20:00のデータ分析が完了しました。
+以下のコマンドをAntigravityで実行してください：
+
+Piste_threads_image_prompt.mdから画像を生成して、
+Piste_threads_image/フォルダに保存してください。
+
+完了後、以下を実行：
+1. cd image_upload && python3 piste_threads_image_uplorder.py
+2. python3 piste_threads_drive_to_notion.py
+
+詳細: /piste_threads_full_run
