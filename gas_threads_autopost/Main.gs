@@ -46,7 +46,6 @@ function publishScheduledPost() {
   // 本文がない場合はスキップ
   if (!postData.body) {
     Logger.log('❌ 本文が空のためスキップします');
-    updateNotionStatus(postData.pageId, STATUS_ERROR);
     return;
   }
   
@@ -63,7 +62,6 @@ function publishScheduledPost() {
   
   if (!creationId) {
     Logger.log('❌ Container作成に失敗しました');
-    updateNotionStatus(postData.pageId, STATUS_ERROR);
     return;
   }
   
@@ -77,7 +75,6 @@ function publishScheduledPost() {
   
   if (!publishedId) {
     Logger.log('❌ Publishに失敗しました');
-    updateNotionStatus(postData.pageId, STATUS_ERROR);
     return;
   }
   

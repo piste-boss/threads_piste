@@ -19,21 +19,22 @@ function convertDriveUrlToDirectUrl(driveUrl) {
   // パターン1: https://drive.google.com/file/d/FILE_ID/view?...
   let match = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (match) {
-    return 'https://drive.google.com/uc?export=download&id=' + match[1];
+    return 'https://lh3.googleusercontent.com/d/' + match[1];
   }
   
   // パターン2: https://drive.google.com/open?id=FILE_ID
   match = driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
   if (match) {
-    return 'https://drive.google.com/uc?export=download&id=' + match[1];
+    return 'https://lh3.googleusercontent.com/d/' + match[1];
   }
   
-  // パターン3: 既にuc?exportの形式
-  if (driveUrl.includes('uc?export=')) {
-    return driveUrl;
+  // パターン3: https://drive.google.com/uc?export=...&id=FILE_ID
+  match = driveUrl.match(/uc\?.*id=([a-zA-Z0-9_-]+)/);
+  if (match) {
+    return 'https://lh3.googleusercontent.com/d/' + match[1];
   }
   
-  // パターン4: lh3.googleusercontent.com（Googleドライブの直接リンク）
+  // パターン4: 既にlh3形式
   if (driveUrl.includes('googleusercontent.com')) {
     return driveUrl;
   }
