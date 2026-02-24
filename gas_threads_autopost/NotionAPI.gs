@@ -91,23 +91,28 @@ function extractPostData(page) {
     comment = props[PROP_COMMENT].rich_text.map(t => t.plain_text).join('');
   }
   
-  // 画像URL
-  let imageUrl = '';
-  if (props[PROP_IMAGE_URL]) {
-    const urlProp = props[PROP_IMAGE_URL];
+  // 画像URL（URL, URL2, URL3 の3プロパティから取得）
+  const imageUrls = [];
+  [PROP_IMAGE_URL, PROP_IMAGE_URL2, PROP_IMAGE_URL3].forEach(propName => {
+    const urlProp = props[propName];
+    if (!urlProp) return;
+    let url = '';
     if (urlProp.type === 'url' && urlProp.url) {
-      imageUrl = urlProp.url;
+      url = urlProp.url;
     } else if (urlProp.type === 'rich_text' && urlProp.rich_text && urlProp.rich_text.length > 0) {
-      imageUrl = urlProp.rich_text.map(t => t.plain_text).join('');
+      url = urlProp.rich_text.map(t => t.plain_text).join('');
     }
-  }
-  
+    if (url.trim()) {
+      imageUrls.push(url.trim());
+    }
+  });
+
   return {
     pageId: page.id,
     title: title,
     body: body,
     comment: comment,
-    imageUrl: imageUrl
+    imageUrls: imageUrls
   };
 }
 

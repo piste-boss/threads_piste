@@ -22,6 +22,7 @@ const THREADS_PUBLISH_URL  = THREADS_API_BASE + '/me/threads_publish';
 // Threads APIはContainer作成→Publish間に待機が必要
 const SLEEP_AFTER_CONTAINER_MS = 30000; // 30秒
 const SLEEP_AFTER_PUBLISH_MS   = 10000; // 10秒
+const SLEEP_BETWEEN_CAROUSEL_ITEMS_MS = 5000; // カルーセルアイテム間 5秒
 
 // ─── Notion プロパティ名 ───
 const PROP_TITLE    = 'タイトル';
@@ -29,11 +30,13 @@ const PROP_DATE     = '投稿日';
 const PROP_BODY     = '本文';
 const PROP_COMMENT  = 'コメント欄';
 const PROP_STATUS   = 'ステータス';
-const PROP_IMAGE_URL = 'URL';
+const PROP_IMAGE_URL  = 'URL';
+const PROP_IMAGE_URL2 = 'URL2';
+const PROP_IMAGE_URL3 = 'URL3';
 
 // ─── ステータス値 ───
 const STATUS_NOT_STARTED = '未着手';
-const STATUS_POSTED      = '投稿済み';
+const STATUS_POSTED      = '完了';
 const STATUS_ERROR       = 'エラー';
 
 /**

@@ -3,7 +3,7 @@
  * 
  * piste_threds_auto_post シナリオの再現：
  *   1. Notionから投稿待ちレコードを1件取得
- *   2. 画像あり/なしで分岐
+ *   2. カルーセル（複数画像）/ 単一画像 / テキストのみ で分岐
  *   3. Threadsに投稿（Container → Sleep → Publish）
  *   4. コメント欄の内容を返信として投稿
  *   5. Notionのステータスを更新
@@ -41,7 +41,7 @@ function publishScheduledPost() {
   Logger.log('  タイトル: ' + postData.title);
   Logger.log('  本文: ' + (postData.body ? postData.body.substring(0, 50) + '...' : '(空)'));
   Logger.log('  コメント: ' + (postData.comment ? postData.comment.substring(0, 50) + '...' : '(空)'));
-  Logger.log('  画像URL: ' + (postData.imageUrl || '(なし)'));
+  Logger.log('  画像URL: ' + (postData.imageUrls && postData.imageUrls.length > 0 ? postData.imageUrls.join(', ') : '(なし)'));
   
   // 本文がない場合はスキップ
   if (!postData.body) {
@@ -49,22 +49,48 @@ function publishScheduledPost() {
     return;
   }
   
-  // ── Step 3: Threads Container作成（画像あり/なし分岐） ──
+  // ── Step 3: Threads Container作成（カルーセル/単一画像/テキスト分岐） ──
   let creationId;
-  
-  if (postData.imageUrl) {
+
+  if (postData.imageUrls && postData.imageUrls.length > 1) {
+    // カルーセル投稿（複数画像）
+    Logger.log('\n[Step 3] カルーセルルート → ' + postData.imageUrls.length + '枚の画像でCARUSEL Containerを作成...');
+
+    // 3a: 各画像のアイテムContainerを作成
+    const childrenIds = [];
+    for (let i = 0; i < postData.imageUrls.length; i++) {
+      Logger.log('  アイテム ' + (i + 1) + '/' + postData.imageUrls.length + ': ' + postData.imageUrls[i]);
+      const itemId = createCarouselItemContainer(postData.imageUrls[i]);
+      if (!itemId) {
+        Logger.log('❌ カルーセルアイテム' + (i + 1) + 'のContainer作成に失敗しました');
+        return;
+      }
+      childrenIds.push(itemId);
+      // アイテム間の待機
+      if (i < postData.imageUrls.length - 1) {
+        Utilities.sleep(SLEEP_BETWEEN_CAROUSEL_ITEMS_MS);
+      }
+    }
+
+    // 3b: アイテムContainerの処理待機
+    Logger.log('  カルーセルアイテム処理待機 (' + (SLEEP_AFTER_CONTAINER_MS / 1000) + '秒)...');
+    Utilities.sleep(SLEEP_AFTER_CONTAINER_MS);
+
+    // 3c: カルーセルContainerを作成
+    creationId = createCarouselContainer(postData.body, childrenIds);
+  } else if (postData.imageUrls && postData.imageUrls.length === 1) {
     Logger.log('\n[Step 3] 画像ありルート → IMAGE Containerを作成...');
-    creationId = createImageContainer(postData.body, postData.imageUrl);
+    creationId = createImageContainer(postData.body, postData.imageUrls[0]);
   } else {
     Logger.log('\n[Step 3] 画像なしルート → TEXT Containerを作成...');
     creationId = createTextContainer(postData.body);
   }
-  
+
   if (!creationId) {
     Logger.log('❌ Container作成に失敗しました');
     return;
   }
-  
+
   // ── Step 4: 待機（MAKEのSleepモジュール相当） ──
   Logger.log('\n[Step 4] Container処理待機 (' + (SLEEP_AFTER_CONTAINER_MS / 1000) + '秒)...');
   Utilities.sleep(SLEEP_AFTER_CONTAINER_MS);
@@ -133,7 +159,7 @@ function testFetchPost() {
   Logger.log('タイトル: ' + data.title);
   Logger.log('本文: ' + data.body);
   Logger.log('コメント: ' + data.comment);
-  Logger.log('画像URL: ' + data.imageUrl);
+  Logger.log('画像URL: ' + (data.imageUrls ? data.imageUrls.join(', ') : '(なし)'));
   Logger.log('ページID: ' + data.pageId);
   Logger.log('=== テスト完了 ===');
 }

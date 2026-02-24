@@ -33,7 +33,7 @@ const PROP_IMAGE_URL = 'URL';
 
 // ─── ステータス値 ───
 const STATUS_NOT_STARTED = '未着手';
-const STATUS_POSTED      = '投稿済み';
+const STATUS_POSTED      = '完了';
 const STATUS_ERROR       = 'エラー';
 
 /**

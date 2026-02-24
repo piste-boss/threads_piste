@@ -149,6 +149,78 @@ function publishContainer(creationId) {
 
 
 /**
+ * カルーセルアイテム用のContainerを作成
+ * @param {string} imageUrl 画像URL（公開アクセス可能なURL）
+ * @return {string|null} creation_id
+ */
+function createCarouselItemContainer(imageUrl) {
+  const token = getThreadsToken();
+
+  const directUrl = convertDriveUrlToDirectUrl(imageUrl);
+  Logger.log('カルーセルアイテム画像URL変換: ' + imageUrl + ' → ' + directUrl);
+
+  const payload = {
+    media_type: 'IMAGE',
+    image_url: directUrl,
+    is_carousel_item: 'true',
+    access_token: token
+  };
+
+  const options = {
+    method: 'post',
+    payload: payload,
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(THREADS_CONTAINER_URL, options);
+  const data = JSON.parse(response.getContentText());
+
+  if (response.getResponseCode() === 200 && data.id) {
+    Logger.log('✅ カルーセルアイテムContainer作成: ' + data.id);
+    return data.id;
+  } else {
+    Logger.log('❌ カルーセルアイテムContainer作成失敗: ' + response.getContentText());
+    return null;
+  }
+}
+
+
+/**
+ * カルーセル投稿のContainerを作成
+ * @param {string} text 投稿テキスト
+ * @param {string[]} childrenIds カルーセルアイテムのContainer IDの配列
+ * @return {string|null} creation_id
+ */
+function createCarouselContainer(text, childrenIds) {
+  const token = getThreadsToken();
+
+  const payload = {
+    media_type: 'CAROUSEL',
+    children: childrenIds.join(','),
+    text: text,
+    access_token: token
+  };
+
+  const options = {
+    method: 'post',
+    payload: payload,
+    muteHttpExceptions: true
+  };
+
+  const response = UrlFetchApp.fetch(THREADS_CONTAINER_URL, options);
+  const data = JSON.parse(response.getContentText());
+
+  if (response.getResponseCode() === 200 && data.id) {
+    Logger.log('✅ CAROUSEL Container作成: ' + data.id);
+    return data.id;
+  } else {
+    Logger.log('❌ CAROUSEL Container作成失敗: ' + response.getContentText());
+    return null;
+  }
+}
+
+
+/**
  * 返信（コメント欄）を投稿
  * @param {string} replyToId 返信先の投稿ID
  * @param {string} text 返信テキスト

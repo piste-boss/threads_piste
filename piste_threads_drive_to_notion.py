@@ -214,13 +214,24 @@ def main():
         if target_dt:
             print(f"Processing {name} -> {target_dt}")
             
+            property_name = "URL"
+            carousel_match = re.search(r'_carousel_(\d)', name)
+            if carousel_match:
+                index = int(carousel_match.group(1))
+                if index == 2:
+                    property_name = "URL2"
+                elif index == 3:
+                    property_name = "URL3"
+            
+            # Now we find Notion pages and sync
             pages = find_page_by_date(notion, target_dt)
             if pages:
                 for page in pages:
-                    # Try to update 'URL' or '画像URL'
-                    if not update_page_url(notion, page['id'], link, "URL"):
-                        print("  Retrying with property '画像URL'...")
-                        update_page_url(notion, page['id'], link, "画像URL")
+                    # Try to update 'URL' (or URL2, URL3)
+                    if not update_page_url(notion, page['id'], link, property_name):
+                        if property_name == "URL":
+                            print("  Retrying with property '画像URL'...")
+                            update_page_url(notion, page['id'], link, "画像URL")
             else:
                 print(f"  No matching Notion page found for {target_dt}")
         else:
