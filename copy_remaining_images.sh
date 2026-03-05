@@ -1,0 +1,4 @@
+cp /Users/ishikawasuguru/.gemini/antigravity/brain/b77d2f77-d86e-4523-af9d-c8d836560802/mar_7_car_3_1772076052679.png /Users/ishikawasuguru/Threads_piste/Piste_threads_image/"2026-03-07-6:00_carousel_3 piste_threads.png"
+cp /Users/ishikawasuguru/.gemini/antigravity/brain/b77d2f77-d86e-4523-af9d-c8d836560802/mar_8_car_1_1772075749498.png /Users/ishikawasuguru/Threads_piste/Piste_threads_image/"2026-03-08-6:00_carousel_1 piste_threads.png"
+cp /Users/ishikawasuguru/.gemini/antigravity/brain/b77d2f77-d86e-4523-af9d-c8d836560802/mar_8_car_2_1772075959108.png /Users/ishikawasuguru/Threads_piste/Piste_threads_image/"2026-03-08-6:00_carousel_2 piste_threads.png"
+cp /Users/ishikawasuguru/.gemini/antigravity/brain/b77d2f77-d86e-4523-af9d-c8d836560802/mar_8_car_3_1772075906574.png /Users/ishikawasuguru/Threads_piste/Piste_threads_image/"2026-03-08-6:00_carousel_3 piste_threads.png"
